@@ -13,6 +13,7 @@ module Danger
   class DangerCobertura < Plugin
     require "oga"
     require_relative "./coverage_item"
+    require_relative "./coverage_source"
 
     ERROR_FILE_NOT_SET = "Cobertura file not set. Use 'cobertura.file = \"path/to/my/report.xml\"'.".freeze
     ERROR_FILE_NOT_FOUND = "No file found at %s".freeze
@@ -134,40 +135,28 @@ module Danger
     # @return [Array<CoverageItem>] Filtered array of items
     def filtered_items
       @filtered_items ||= coverage_items.select do |item|
-        (include_item_prefix?(item) || include_target_prefix?(item)) && !item.name.include?("$")
+        include_item_with_sources(item) && !item.name.include?("$")
       end
     end
 
-    # Combine item filename with prefix.
+    # Combine filename with possible sources and prefix
     #
     # @param item [CoverageItem] Coverage item to create the full filename.
-    # @return [String] Combined filename.
-    def include_item_prefix?(item)
-      prefixed = "".dup
-      if filename_prefix
-        prefixed << filename_prefix
-        prefixed << "/" unless filename_prefix.chars.last == "/"
-      end
-      prefixed << item.filename
-
+    # @return [String] Combined filename if present,.
+    def include_item_with_sources(item)
       result = false
       target_files.each do |target_file|
-        result = target_file.eql?(prefixed)
-        break if result
-      end
-      result
-    end
-
-    def include_target_prefix?(item)
-      result = false
-      target_files.each do |target_file|
-        prefixed = "".dup
-        if filename_prefix
-          prefixed << filename_prefix
-          prefixed << "/" unless filename_prefix.chars.last == "/"
+        result = sources.find do |source|
+          path = "".dup
+          path << source.value
+          path << "/" unless path.chars.last == "/"
+          if filename_prefix
+            path << filename_prefix
+            path << "/" unless filename_prefix.chars.last == "/"
+          end
+          path << item.filename
+          path.end_with?(target_file)
         end
-        prefixed << target_file
-        result = prefixed.eql?(item.filename)
         break if result
       end
       result
@@ -203,6 +192,12 @@ module Danger
     def coverage_items
       @coverage_items ||= xml_report.xpath("//class").map do |node|
         CoverageItem.new(node)
+      end
+    end
+
+    def sources
+      @sources ||= xml_report.xpath("//source").map do |node|
+        CoverageSource.new(node)
       end
     end
   end
