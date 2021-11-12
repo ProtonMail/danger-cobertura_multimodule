@@ -1,0 +1,14 @@
+image: ruby:2.7
+
+stages:
+  - test
+
+test_plugin:
+  stage: test
+  when: always
+  tags:
+    - small
+  before_script:
+    - bundle install
+  script:
+    - bundle exec rake spec
