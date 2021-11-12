@@ -1,4 +1,11 @@
-Copyright (c) 2018 Kyaak <kyaak.dev@gmail.com>
+Copyright for portions of project danger-cobertura_multimodule are 
+held by Kyaak <kyaak.dev@gmail.com>, 2018 as part of project 
+danger-cobertura.
+
+All other copyright for project danger-cobertura_multimodule are held 
+by Proton Technologies AG, 2021.
+
+Original license:
 
 MIT License
 
